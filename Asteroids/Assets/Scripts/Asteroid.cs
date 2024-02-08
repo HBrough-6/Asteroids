@@ -1,37 +1,16 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
-
-public enum AsteroidSize
-{
-    Big = 1,
-    Medium,
-    Small
-}
-
 public  class Asteroid : MonoBehaviour
 {
-    /// <summary>
-    /// creates an asteroid object of size Big,Medium,or Small
-    /// </summary>
-    /// <param name="size">the size of the asteroid</param>
-    public Asteroid(AsteroidSize size)
-    {
-        currentAsteroidSize = size;
-    }
-    public Asteroid()
-    {
-        currentAsteroidSize = AsteroidSize.Big;
-    }
-
     // holds the reference for the smaller asteroid reference
     [SerializeField]
-    private GameObject[] smallerAsteroidRef;
-
-    private AsteroidSize currentAsteroidSize;
+    private GameObject smallerAsteroidRef;
+    [SerializeField]
     // how fast the asteroid is going
-    private float speed;
+    private float speed = 5;
 
     // how many points the asteroid is worth
     private int _points;
@@ -44,14 +23,40 @@ public  class Asteroid : MonoBehaviour
         }
     }
 
+    private float increaseSpeedDelay = 2;
 
-    private void Move()
+    private void Update()
     {
-
+        Move();
     }
 
-    private void AsteroidBreak()
+    // moves the asteroids forwards
+    private void Move()
     {
+        transform.Translate(transform.up * Time.deltaTime * speed);
+    }
 
+    // spawns 2 smaller asteroids if possible, and then destroys the asteroid
+    public void AsteroidBreak()
+    {
+        // if the asteroidref is not null
+        if (smallerAsteroidRef != null)
+        {
+            // create 2 smaller asteroids 
+            Instantiate(smallerAsteroidRef, new Vector3(transform.position.x, transform.position.y + 1, transform.position.z), transform.rotation);
+            Instantiate(smallerAsteroidRef, new Vector3(transform.position.x, transform.position.y - 1, transform.position.z), transform.rotation);
+        }
+        // destroy the asteroid and remove it from the list of asteroids
+        GameManager.Instance.RemoveAsteroidFromList(gameObject);
+    }
+
+    // increases the speed of the asteroid every increaseSpeedDelay seconds
+    private IEnumerator IncreaseSpeed()
+    {
+        while (this.enabled)
+        {
+            yield return new WaitForSeconds(increaseSpeedDelay);
+            speed += 0.2f;
+        }
     }
 }
