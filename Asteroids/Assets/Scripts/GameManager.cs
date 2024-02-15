@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 public class GameManager : Singleton<GameManager>
 {
     // holds all the asteroids in scene
+    [SerializeField]
     private List<GameObject> _asteroidsInScene;
     // holds the current level that the player is on
     private int currentLevel;
@@ -21,8 +22,24 @@ public class GameManager : Singleton<GameManager>
     private GameObject BigAsteroidRef;
 
     // the two opposite corers that asteroids can spawn between.
-    private Vector2 AsteroidSpawnBoundsBottom = new Vector2(-10.25f, -5f);
-    private Vector2 AsteroidSpawnBoundsTop = new Vector2(10.25f, 5f);
+    private Vector2 _asteroidSpawnBoundsTop = new Vector2(9f, 4f);
+    private Vector2 _asteroidSpawnBoundsBottom = new Vector2(-9f, -4f);
+
+    // accessors for the spawnBounds on screen
+    public Vector2 AsteroidSpawnBoundsTop
+    {
+        get
+        {
+            return _asteroidSpawnBoundsTop;
+        }
+    }
+    public Vector2 AsteroidSpawnBoundsBottom
+    {
+        get
+        {
+            return _asteroidSpawnBoundsBottom;
+        }
+    }
 
     private void Awake()
     {
@@ -59,15 +76,14 @@ public class GameManager : Singleton<GameManager>
         for (int asteroid = 0; asteroid < MaxAsteroidCount + currentLevel; asteroid++)
         {
             // create random coordinates and rotation for the asteroids to spawn at
-            float xCoordinate = UnityEngine.Random.Range(AsteroidSpawnBoundsBottom.x, AsteroidSpawnBoundsTop.x);
-            float yCoordinate = UnityEngine.Random.Range(AsteroidSpawnBoundsBottom.y, AsteroidSpawnBoundsTop.y);
+            Vector2 randomCoords = CreateRandomCoordinates();
             Quaternion rotation = UnityEngine.Random.rotation;
             // limit the rotation to just the z axis
             rotation = Quaternion.Euler(0, 0, rotation.z * 360);
 
             // create the asteroid and add it to the list
-            AddAsteroidToList(Instantiate(BigAsteroidRef, new Vector3(xCoordinate, yCoordinate, 0), rotation));
-
+            AddAsteroidToList(Instantiate(BigAsteroidRef, new Vector3(randomCoords.x, randomCoords.y, 0), rotation)as GameObject);
+            Debug.Log(asteroid);
         }
         // spawn maxAsteroidCount + currentLevel asteroids
         // add each asteroid to asteroidsInScene
@@ -92,5 +108,13 @@ public class GameManager : Singleton<GameManager>
         _asteroidsInScene.Remove(asteroid);
         Destroy(asteroid);
         asteroidCount--;
+    }
+
+    public Vector2 CreateRandomCoordinates()
+    {
+        float xCoordinate = UnityEngine.Random.Range(_asteroidSpawnBoundsBottom.x, _asteroidSpawnBoundsTop.x);
+        float yCoordinate = UnityEngine.Random.Range(_asteroidSpawnBoundsBottom.y, _asteroidSpawnBoundsTop.y);
+
+        return new Vector2(xCoordinate, yCoordinate);
     }
 }
