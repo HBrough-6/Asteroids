@@ -3,10 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class PlayerController : MonoBehaviour
+// Brough, Heath
+// 2/20/24
+// controls the movement and shooting of the player
+
+public class PlayerController : Singleton<PlayerController>
 {
     // input actions reference
     InputActions inputActions;
+
+    public bool isInvincible = false;
 
     /// <summary>
     /// How fast the player moves forwards
@@ -16,7 +22,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// how fast the player rotates
     /// </summary>
-    private float rotationSpeed = 10;
+    private float rotationSpeed = 5;
 
     /// <summary>
     /// Tells if the player can shoot or not
@@ -26,7 +32,7 @@ public class PlayerController : MonoBehaviour
     /// <summary>
     /// How long you have to wait before shooting again
     /// </summary>
-    private float shootDelay = 0.5f;
+    private float shootDelay = 0.4f;
 
     /// <summary>
     /// How long the ship is not on screen before it comes back
@@ -49,43 +55,46 @@ public class PlayerController : MonoBehaviour
     [SerializeField]
     private GameObject bulletRef;
 
-
+    private float currentMove = 0;
+    private Vector3 currentRotate = Vector3.zero;
     private void Awake()
     {
         inputActions = new InputActions();
         inputActions.Enable();
     }
 
+    private void Start()
+    {
+        StartCoroutine(GoInvincible());
+    }
+
     // shoots a bullet out the front of the ship
-    public void Shoot()
+    private void OnShoot()
     {
-        // Instantiate(bulletRef, transform.position, transform.rotation);
+        if (canShoot)
+        {
+            Instantiate(bulletRef, transform.GetChild(0).transform.position, transform.rotation);
+            StartCoroutine(ShootDelay());
+        }
     }
 
-    /// <summary>
-    /// pushes the players in the direction they are facing
-    /// </summary>
-    public void Thrust()
+    private IEnumerator ShootDelay()
     {
-        gameObject.GetComponent<Rigidbody>().AddForce(Vector3.forward * Time.deltaTime * speed);
+        canShoot = false;
+        yield return new WaitForSeconds(shootDelay);
+        canShoot = true;
     }
 
-    // rotates the player left
-    public void RotateLeft(InputAction.CallbackContext context)
+
+    private void FixedUpdate()
     {
-        transform.Rotate(new Vector3(0, 0, -rotationSpeed));
-        // for rotation calling the function with context.started will set the rotation
-        // to the left and then the rotation should be changed in update/fixed update
-        // try to do the same for movement
-    }
-    // rotates the player right
-    public void RotateRight()
-    {
-        transform.Rotate(new Vector3(0, 0, rotationSpeed));
+        //gameObject.GetComponent<Rigidbody>().AddForce(currentMove, ForceMode.Force);
+        transform.Translate(Vector3.up * speed * Time.deltaTime * currentMove);
+        transform.Rotate(currentRotate);
     }
 
     // places the player in a random spot on screen after a short delay
-    public void Warp()
+    private void OnWarp()
     {
         if (canWarp)
         {
@@ -109,9 +118,51 @@ public class PlayerController : MonoBehaviour
         transform.position = new Vector3(randomCoords.x, randomCoords.y, 0);
 
         // wait for the cooldown
-        yield return new WaitForSeconds(warpAwayDelay);
+        yield return new WaitForSeconds(warpCooldown - warpAwayDelay);
         canWarp = true;
     }
 
+    private void OnRotate(InputValue input)
+    {
+        currentRotate =new Vector3(0, 0, rotationSpeed * -input.Get<Vector2>().x);
+    }
 
+    private void OnThrust(InputValue input)
+    {
+        currentMove = input.Get<Vector3>().y;
+    }
+
+    // makes the player invincible
+    public IEnumerator GoInvincible()
+    {   
+        // make player invincible
+        isInvincible = true;
+
+        // iterates 5 times for a total of 2.5 seconds
+        for (int duration = 0; duration < 5; duration++)
+        {
+            // disables the mesh
+            gameObject.GetComponent<Renderer>().enabled = false;
+            yield return new WaitForSeconds(0.2f);
+            // enables the mesh
+            gameObject.GetComponent<Renderer>().enabled = true;
+            yield return new WaitForSeconds(0.3f);
+
+        }
+        // make sure the mesh is enabled
+        gameObject.GetComponent<Renderer>().enabled = true;
+        // player is no longer invincible
+        isInvincible = false;
+        
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // if a player hits an asteroid, enemy, or bullet
+        if ((other.CompareTag("Asteroid") || other.CompareTag("Saucer") || other.CompareTag("EnemyBullet")) && !isInvincible) ;
+        {
+            // take damage
+            PlayerData.Instance.GetComponent<PlayerData>().TakeDamage();
+        }
+    }
 }

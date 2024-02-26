@@ -6,6 +6,12 @@ TagManager:
   tags:
   - Asteroid
   - Wall
+  - ScoreText
+  - LivesText
+  - Saucer
+  - EnemyBullet
+  - PlayerData
+  - PlayerBullet
   layers:
   - Default
   - TransparentFX

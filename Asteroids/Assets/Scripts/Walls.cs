@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // Brough, Heath
-// 2/8/2024
+// 2/20/2024
 // handles the screenwrapping of objects going out of bounds
 
 public class Walls : MonoBehaviour
@@ -13,25 +13,10 @@ public class Walls : MonoBehaviour
     [SerializeField]
     private bool isLeftOrRight = true;
 
-    int layermask = 1 << 2;
-    // Start is called before the first frame update
-    private void Awake()
-    {
-        // invert layermask to make sure it ignores layer 2
-        layermask = ~layermask;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Wall"))
         {
-            Debug.Log("Hit");
             switch (isLeftOrRight)
             {
                 // is left or right
@@ -44,6 +29,12 @@ public class Walls : MonoBehaviour
                     // move the object to the other side of the screen, top or bottom
                     other.transform.position = new Vector3(other.transform.position.x, -other.transform.position.y, other.transform.position.z);
                     break;
+            }
+            // if an asteroid hits the walls
+            if (other.CompareTag("Asteroid"))
+            {
+                // start checking for stuck asteroid
+                StartCoroutine(other.GetComponent<Asteroid>().ScreenWrapped());
             }
         }
         

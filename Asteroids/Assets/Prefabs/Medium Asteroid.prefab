@@ -100,7 +100,7 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -119,4 +119,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   smallerAsteroidRef: {fileID: 4240448623758754189, guid: 544e58613b275d14da1c712fd945ba59, type: 3}
-  currentAsteroidSize: 2
+  currentSpeed: 1.75
+  spawnAngle: 30
+  _points: 25
